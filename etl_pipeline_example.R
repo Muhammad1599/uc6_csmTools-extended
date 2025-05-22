@@ -1,7 +1,7 @@
 #' Example of UC6 ETL pipeline with LTE data from experimental datasets
 #' 
 #' This pipeline demonstrates the use of the generalized reshape function with multiple
-#' long-term experiment datasets (Seehausen and Munch).
+#' long-term experiment datasets (Seehausen, Munch, and Rau).
 #' 
 #' @importFrom stringr str_extract
 #' @importFrom readxl read_excel
@@ -27,11 +27,8 @@ remotes::install_local("./", force = TRUE)
 source("./inst/load_libraries.R")
 library(csmTools)
 
-
 # At the start of your script
 setwd("/Users/muhammadarslan/Downloads/uc6_csmTools-main 2 copy")
-source("./generalized_reshape_function.R")
-
 
 # Source the generalized reshape function
 source("./generalized_reshape_function.R")
@@ -119,31 +116,131 @@ if(!is.null(munch_metadata) && "VERSUCHSAUFBAU" %in% names(munch_list)) {
   munch_fmt <- reshape_exp_data("munch")
 }
 
+# ---- Load and process Rau dataset ------------------------------------
+
+cat("\n================= PROCESSING RAU DATASET =================\n")
+
+# Load Rau data
+cat("Loading Rau dataset files...\n")
+rau_files <- list.files(path = "./inst/extdata/rau", pattern = "\\.csv$")
+rau_paths <- sapply(rau_files, function(x){ paste0("./inst/extdata/rau/", x) })
+rau_list <- lapply(rau_paths, function(x) { 
+  tryCatch(
+    read.csv(x, fileEncoding = "iso-8859-1"),
+    error = function(e) {
+      cat("Warning: Could not read file", x, "\n")
+      NULL
+    }
+  )
+})
+rau_list <- rau_list[!sapply(rau_list, is.null)]
+
+# Simplify names
+names(rau_list) <- str_extract(names(rau_list), "_L[0-9]+_V[0-9]+_[0-9]+_(.*)") # cut names after version number
+names(rau_list) <- gsub("_L[0-9]+_V[0-9]+_[0-9]+_", "", names(rau_list)) # drop version number
+names(rau_list) <- sub("\\..*$", "", names(rau_list)) # drop file extension
+
+# Get metadata
+cat("Loading Rau metadata...\n")
+rau_metadata <- tryCatch(
+  read_excel("./inst/extdata/rau/ltfe_rauischholzhausen_xls_metadata.xls"),
+  error = function(e) {
+    cat("Warning: Could not read metadata file. Using default configuration.\n")
+    NULL
+  }
+)
+
+# Process Rau dataset
+cat("Processing Rau dataset using generalized reshape function...\n")
+if(!is.null(rau_metadata) && "VERSUCHSAUFBAU" %in% names(rau_list)) {
+  # Method 1: Using full parameters
+  rau_fmt <- reshape_exp_data(db = rau_list, 
+                             metadata = rau_metadata, 
+                             mother_tbl = rau_list$VERSUCHSAUFBAU)
+} else {
+  # Method 2: Using simplified dataset name
+  rau_fmt <- reshape_exp_data("rau")
+}
+
 # ---- Display and Compare Results -------------------------------------
 
 cat("\n================= DATASETS SUMMARY =================\n")
 
-# Display basic information about both datasets
-cat("\nSeehausen dataset structure:\n")
-cat("Components:", paste(names(seehausen_fmt), collapse=", "), "\n")
-cat("Experiment details:", attr(seehausen_fmt, "EXP_DETAILS"), "\n")
-cat("Site code:", attr(seehausen_fmt, "SITE_CODE"), "\n")
-cat("Number of treatments:", nrow(seehausen_fmt$TREATMENTS), "\n")
-cat("Number of management tables:", length(seehausen_fmt$MANAGEMENT), "\n")
-cat("Number of observed summary tables:", length(seehausen_fmt$OBSERVED_Summary), "\n")
-cat("Number of observed timeseries tables:", length(seehausen_fmt$OBSERVED_TimeSeries), "\n")
+# Function to display dataset contents
+display_dataset_contents <- function(fmt, name) {
+  cat(paste0("\n\n========== ", name, " DATASET CONTENTS ==========\n\n"))
+  
+  # Display general structure
+  cat("Components:", paste(names(fmt), collapse=", "), "\n")
+  cat("Experiment details:", attr(fmt, "EXP_DETAILS"), "\n")
+  cat("Site code:", attr(fmt, "SITE_CODE"), "\n")
+  cat("Number of treatments:", nrow(fmt$TREATMENTS), "\n")
+  cat("Number of management tables:", length(fmt$MANAGEMENT), "\n")
+  cat("Number of observed summary tables:", length(fmt$OBSERVED_Summary), "\n")
+  cat("Number of observed timeseries tables:", length(fmt$OBSERVED_TimeSeries), "\n\n")
+  
+  # Display content of each component
+  cat("--- GENERAL Information ---\n")
+  print(fmt$GENERAL)
+  cat("\n")
+  
+  cat("--- FIELDS Information ---\n")
+  print(head(fmt$FIELDS, 5))
+  cat("... (showing 5 of", nrow(fmt$FIELDS), "rows)\n\n")
+  
+  cat("--- TREATMENTS Information ---\n")
+  print(head(fmt$TREATMENTS, 5))
+  cat("... (showing 5 of", nrow(fmt$TREATMENTS), "rows)\n\n")
+  
+  # Display some management tables
+  cat("--- MANAGEMENT Tables ---\n")
+  if (length(fmt$MANAGEMENT) > 0) {
+    # Show first two management tables
+    i <- 0
+    for (tbl_name in names(fmt$MANAGEMENT)[1:min(2, length(fmt$MANAGEMENT))]) {
+      i <- i + 1
+      cat(paste0("Management Table ", i, ": ", tbl_name, "\n"))
+      print(head(fmt$MANAGEMENT[[tbl_name]], 3))
+      cat("... (showing 3 of", nrow(fmt$MANAGEMENT[[tbl_name]]), "rows)\n\n")
+    }
+  } else {
+    cat("No management tables found.\n\n")
+  }
+  
+  # Display some observed summary tables
+  cat("--- OBSERVED_Summary Tables ---\n")
+  if (length(fmt$OBSERVED_Summary) > 0) {
+    # Show first two observed summary tables
+    i <- 0
+    for (tbl_name in names(fmt$OBSERVED_Summary)[1:min(2, length(fmt$OBSERVED_Summary))]) {
+      i <- i + 1
+      cat(paste0("Observed Summary Table ", i, ": ", tbl_name, "\n"))
+      print(head(fmt$OBSERVED_Summary[[tbl_name]], 3))
+      cat("... (showing 3 of", nrow(fmt$OBSERVED_Summary[[tbl_name]]), "rows)\n\n")
+    }
+  } else {
+    cat("No observed summary tables found.\n\n")
+  }
+  
+  # Display observed timeseries tables (if any)
+  cat("--- OBSERVED_TimeSeries Tables ---\n")
+  if (length(fmt$OBSERVED_TimeSeries) > 0) {
+    # Show first two observed timeseries tables
+    i <- 0
+    for (tbl_name in names(fmt$OBSERVED_TimeSeries)[1:min(2, length(fmt$OBSERVED_TimeSeries))]) {
+      i <- i + 1
+      cat(paste0("Observed TimeSeries Table ", i, ": ", tbl_name, "\n"))
+      print(head(fmt$OBSERVED_TimeSeries[[tbl_name]], 3))
+      cat("... (showing 3 of", nrow(fmt$OBSERVED_TimeSeries[[tbl_name]]), "rows)\n\n")
+    }
+  } else {
+    cat("No observed timeseries tables found.\n\n")
+  }
+}
 
-cat("\nMunch dataset structure:\n")
-cat("Components:", paste(names(munch_fmt), collapse=", "), "\n")
-cat("Experiment details:", attr(munch_fmt, "EXP_DETAILS"), "\n")
-cat("Site code:", attr(munch_fmt, "SITE_CODE"), "\n")
-cat("Number of treatments:", nrow(munch_fmt$TREATMENTS), "\n")
-cat("Number of management tables:", length(munch_fmt$MANAGEMENT), "\n")
-cat("Number of observed summary tables:", length(munch_fmt$OBSERVED_Summary), "\n")
-cat("Number of observed timeseries tables:", length(munch_fmt$OBSERVED_TimeSeries), "\n")
-
-# Optional: Save the processed datasets
-# saveRDS(seehausen_fmt, "./output/seehausen_formatted.rds")
-# saveRDS(munch_fmt, "./output/munch_formatted.rds")
+# Display contents of all three datasets
+display_dataset_contents(seehausen_fmt, "SEEHAUSEN")
+display_dataset_contents(munch_fmt, "MUNCH")
+display_dataset_contents(rau_fmt, "RAU")
 
 cat("\nPipeline execution completed successfully.\n") 
