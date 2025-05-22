@@ -322,7 +322,7 @@ load_dataset <- function(config) {
 
 #' Create dataset configuration for specific datasets
 #' 
-#' @param dataset_name name of the dataset ("seehausen" or "munch")
+#' @param dataset_name name of the dataset ("seehausen", "munch", or "rau")
 #' 
 #' @return a list with dataset configuration
 create_dataset_config <- function(dataset_name) {
@@ -350,16 +350,18 @@ create_dataset_config <- function(dataset_name) {
         exp_details = "LTE Seehausen, Duengungs-Kombinationsversuch Seehausen (F1-70)",
         site_code = "SEDE",
         location = list(
-          lat = 51.706944,
-          lon = 11.737778
+          lat = 51.401884,  # Replace with actual lat
+          lon = 12.418934   # Replace with actual lon
         )
       ),
       table_patterns = list(
         ertrag = "ERTRAG",
         ernte = "ERNTE",
         bodenlabor = "BODENLABORWERTE",
+        boden = "BODEN",
         probenahme_boden = "PROBENAHME_BODEN",
         pflanzenlabor = "PFLANZENLABORWERTE",
+        pflanze = "PFLANZE",
         probenahme_pflanzen = "PROBENAHME_PFLANZEN",
         duengung = "DUENGUNG",
         aussaat = "AUSSAAT",
@@ -373,23 +375,24 @@ create_dataset_config <- function(dataset_name) {
         ertrag_ernte = "Ernte_ID",
         bodenlabor_probenahme = "Probenahme_Boden_ID",
         pflanzenlabor_probenahme = "Probenahme_Pflanzen_ID"
-      )
+      ),
+      treatment_candidates = c("Pruefglied_ID", "Treatment_id", "Pruefglied", "Variante", "Var", "Treatment")
     ))
   } else if(tolower(dataset_name) == "munch") {
     return(list(
-      name = "Munch",
+      name = "Muencheberg",
       path = "./inst/extdata/lte_Munch/0_raw",
-      name_pattern = "v140_mun.V[0-9]+_[0-9]+_(.+)\\.csv",
+      name_pattern = "v140_mun.V2_0_(.+)\\.csv",
       col_mapping = list(
         year = "Year",
         plot = "Plot_id",
         rep = "Rep_no"
       ),
-      year_variants = c("Versuchsjahr", "JAHR", "ERNTEJAHR", "Jahr"),
-      plot_variants = c("Parzelle_ID", "Parzelle", "PARZID", "ï..Parzelle_ID", "Parz"),
-      rep_variants = c("Wiederholung", "WDHLG", "REPLIKAT", "Wdh"),
-      plots_len = 96,
-      max_events = 1,
+      year_variants = c("Versuchsjahr", "JAHR", "ERNTEJAHR"),
+      plot_variants = c("Parzelle_ID", "Parzelle", "PARZID", "ï..Parzelle_ID"),
+      rep_variants = c("Wiederholung", "WDHLG", "REPLIKAT"),
+      plots_len = 168,  # Replace with actual plot count
+      max_events = 8,
       site_info = list(
         person = "Test Person",
         email = "test@example.com",
@@ -399,253 +402,504 @@ create_dataset_config <- function(dataset_name) {
         exp_details = "LTE Muencheberg, Static Fertilization Experiment V140",
         site_code = "MUDE",
         location = list(
-          lat = 52.515,
-          lon = 14.122
+          lat = 52.515,  # Replace with actual lat
+          lon = 14.122   # Replace with actual lon
         )
       ),
       table_patterns = list(
         ertrag = "ERTRAG",
         ernte = "ERNTE",
+        bodenlabor = "BODENLABORWERTE",
         boden = "BODEN",
+        probenahme_boden = "PROBENAHME_BODEN",
+        pflanzenlabor = "PFLANZENLABORWERTE",
         pflanze = "PFLANZE",
+        probenahme_pflanzen = "PROBENAHME_PFLANZEN",
         duengung = "DUENGUNG",
         aussaat = "AUSSAAT",
         beregnung = "BEREGNUNG",
         bodenbearbeitung = "BODENBEARBEITUNG",
         pflanzenschutz = "PFLANZENSCHUTZ",
-        versuchsaufbau = c("VERSUCHSAUFBAU", "VERSUCHSPLAN"),
+        versuchsaufbau = "VERSUCHSAUFBAU",
         parzelle = "PARZELLE"
+      ),
+      link_keys = list(
+        ertrag_ernte = "Ernte_ID",
+        bodenlabor_probenahme = "Probenahme_Boden_ID",
+        pflanzenlabor_probenahme = "Probenahme_Pflanzen_ID"
+      ),
+      treatment_candidates = c("Pruefglied_ID", "Treatment_id", "Pruefglied", "Variante", "Var", "Treatment")
+    ))
+  } else if(tolower(dataset_name) == "rau") {
+    return(list(
+      name = "Rauischholzhausen",
+      path = "./inst/extdata/rau",
+      name_pattern = "ltfe_rauischholzhausen.ID_L[0-9]+_V[0-9]+_[0-9]+_(.+)\\.csv",
+      col_mapping = list(
+        year = "Year",
+        plot = "Plot_id",
+        rep = "Rep_no"
+      ),
+      year_variants = c("Versuchsjahr", "JAHR", "ERNTEJAHR", "Jahr"),
+      plot_variants = c("Parzelle_ID", "Parzelle", "PARZID", "ï..Parzelle_ID"),
+      rep_variants = c("Wiederholung", "WDHLG", "REPLIKAT"),
+      plots_len = 225,  # Based on the parzelle table which has 225 plots
+      max_events = 8,
+      site_info = list(
+        person = "Test Person",
+        email = "test@example.com",
+        address = "Test Address",
+        site = "Rauischholzhausen",
+        country = "Germany",
+        exp_details = "LTE Rauischholzhausen, Long-term fertilization experiment",
+        site_code = "RAUD",
+        location = list(
+          lat = 50.6747,  # Approximate coordinates for Rauischholzhausen
+          lon = 8.8809
+        )
+      ),
+      table_patterns = list(
+        ertrag = "ERTRAG",
+        ernte = "ERNTE",
+        bodenlabor = "BODENLABORWERTE",
+        boden = "BODEN",
+        probenahme_boden = "PROBENAHME_BODEN",
+        pflanzenlabor = "PFLANZENLABORWERTE",
+        pflanze = "PFLANZE",
+        probenahme_pflanzen = "PROBENAHME_PFLANZEN",
+        duengung = "DUENGUNG",
+        aussaat = "AUSSAAT",
+        beregnung = "BEREGNUNG",
+        bodenbearbeitung = "BODENBEARBEITUNG",
+        pflanzenschutz = "PFLANZENSCHUTZ",
+        versuchsaufbau = "VERSUCHSAUFBAU",
+        parzelle = "PARZELLE",
+        pruefglied = "PRUEFGLIED",
+        faktor = "FAKTOR",
+        klimadaten = "KLIMADATEN"
+      ),
+      link_keys = list(
+        pflanzenlabor_probenahme = "Probenahme_Pflanzen_ID", 
+        bodenlabor_probenahme = "Probenahme_Boden_ID",
+        ertrag_ernte = "Ernte_ID"
       ),
       treatment_candidates = c("Pruefglied_ID", "Pruefglied", "Variante", "Var", "Treatment")
     ))
   } else {
-    stop(paste("Unknown dataset name:", dataset_name))
+    warning(paste0("Unknown dataset: ", dataset_name, ". Using Seehausen configuration."))
+    return(create_dataset_config("seehausen"))
   }
 }
 
-#' Tag data types for tables in a dataset
+#' Tag data tables by type based on naming patterns and content
 #' 
-#' @param db the dataset tables
-#' @param config dataset configuration
+#' @param db a list of data frames
+#' @param config a dataset configuration
 #' 
-#' @return a list with categorized tables
+#' @return a list with categorized tables (management, observed_summary, observed_timeseries, other)
+#'
 tag_data_type <- function(db, config) {
-  # Initialize return lists
+  # Initialize categories
   management <- list()
   observed_summary <- list()
   observed_timeseries <- list()
   other <- list()
   
-  years_col <- config$col_mapping$year
-  plots_col <- config$col_mapping$plot
+  is_rau_dataset <- grepl("rauischholzhausen", config$name, ignore.case = TRUE)
+  is_munch_dataset <- grepl("muencheberg", config$name, ignore.case = TRUE)
   
-  cat(paste0("Categorizing tables for ", config$name, " dataset:\n"))
-  
-  # Process each table
   for (df_name in names(db)) {
     df <- db[[df_name]]
     cat("  Processing table:", df_name, "\n")
     
-    # Handle ERTRAG tables
-    if(grepl(config$table_patterns$ertrag, df_name, ignore.case = TRUE)) {
-      cat("    Ertrag table detected, categorizing as 'observed_summary'\n")
-      
-      # For Seehausen: Link ERTRAG with ERNTE to get Year and Plot_id if needed
-      if(!years_col %in% colnames(df) && 
-         !is.null(config$link_keys$ertrag_ernte) && 
-         config$link_keys$ertrag_ernte %in% colnames(df)) {
+    # Check if key columns exist
+    has_year <- config$col_mapping$year %in% colnames(df)
+    has_plot <- config$col_mapping$plot %in% colnames(df)
+    
+    # For Munch dataset, handle specific column naming
+    if (is_munch_dataset) {
+      # For Munch, special handling for BODENLABORWERTE and PROBENAHME_BODEN
+      if (grepl(config$table_patterns$bodenlabor, df_name, ignore.case = TRUE)) {
+        cat("    Soil data table detected\n")
         
-        cat("    Linking ERTRAG with ERNTE to get Year and Plot_id\n")
-        ernte_table <- NULL
-        
-        # Find the ERNTE table
-        for(t_name in names(db)) {
-          if(grepl(config$table_patterns$ernte, t_name, ignore.case = TRUE) && 
-             years_col %in% colnames(db[[t_name]])) {
-            ernte_table <- db[[t_name]]
+        # Find the corresponding probenahme table
+        probe_table_name <- NULL
+        for (name in names(db)) {
+          if (grepl(config$table_patterns$probenahme_boden, name, ignore.case = TRUE)) {
+            probe_table_name <- name
             break
           }
         }
         
-        if(!is.null(ernte_table)) {
-          cat("    Found ERNTE table, linking...\n")
-          linked_df <- df %>%
-            left_join(ernte_table %>% select(!!sym(config$link_keys$ertrag_ernte), 
-                                            all_of(years_col), all_of(plots_col)),
-                      by = config$link_keys$ertrag_ernte)
-          observed_summary[[df_name]] <- linked_df
-          attr(observed_summary[[df_name]], "category") <- "observed_summary"
-        } else {
-          cat("    No ERNTE table found, categorizing as 'other'\n")
-          other[[df_name]] <- df
-          attr(other[[df_name]], "category") <- "other"
-        }
-      } else {
-        # For Munch or if direct linkage not needed
-        observed_summary[[df_name]] <- df
-        attr(observed_summary[[df_name]], "category") <- "observed_summary"
-      }
-    } 
-    # Handle BODENLABORWERTE (Seehausen) or BODEN (Munch)
-    else if(any(sapply(c(config$table_patterns$bodenlabor, config$table_patterns$boden), 
-                      function(pattern) grepl(pattern, df_name, ignore.case = TRUE)))) {
-      cat("    Soil data table detected\n")
-      
-      # For Seehausen: Link with PROBENAHME_BODEN if needed
-      if(!years_col %in% colnames(df) && 
-         !is.null(config$link_keys$bodenlabor_probenahme) && 
-         config$link_keys$bodenlabor_probenahme %in% colnames(df)) {
-        
-        cat("    Linking soil lab values with soil sampling\n")
-        probe_table <- NULL
-        
-        # Find the PROBENAHME_BODEN table
-        for(t_name in names(db)) {
-          if(grepl(config$table_patterns$probenahme_boden, t_name, ignore.case = TRUE) && 
-             years_col %in% colnames(db[[t_name]])) {
-            probe_table <- db[[t_name]]
-            break
-          }
-        }
-        
-        if(!is.null(probe_table)) {
+        if (!is.null(probe_table_name)) {
+          cat("    Linking soil lab values with soil sampling\n")
           cat("    Found soil sampling table, linking...\n")
-          linked_df <- df %>%
-            left_join(probe_table %>% select(!!sym(config$link_keys$bodenlabor_probenahme), 
-                                             all_of(years_col), all_of(plots_col)),
-                      by = config$link_keys$bodenlabor_probenahme)
-          observed_summary[[df_name]] <- linked_df
-          attr(observed_summary[[df_name]], "category") <- "observed_summary"
+          probe_table <- db[[probe_table_name]]
+          
+          # Check what linking columns are available
+          if ("Probenahme_Boden_ID" %in% colnames(df) && "Probenahme_Boden_ID" %in% colnames(probe_table)) {
+            joined_df <- df %>%
+              left_join(probe_table, by = "Probenahme_Boden_ID")
+            
+            if (config$col_mapping$year %in% colnames(joined_df) && config$col_mapping$plot %in% colnames(joined_df)) {
+              observed_summary[[df_name]] <- joined_df
+            } else {
+              other[[df_name]] <- joined_df
+            }
+            next
+          }
         } else {
-          cat("    No soil sampling table found, categorizing as 'other'\n")
-          other[[df_name]] <- df
-          attr(other[[df_name]], "category") <- "other"
+          # If no linking possible but has year and plot columns
+          if (has_year && has_plot) {
+            cat("    Categorizing as 'observed_summary'\n")
+            observed_summary[[df_name]] <- df
+          } else {
+            cat("    Missing year or plot column, categorizing as 'other'\n")
+            other[[df_name]] <- df
+          }
+          next
         }
-      } 
-      # For Munch or direct soil data
-      else if (years_col %in% colnames(df) && plots_col %in% colnames(df)) {
-        cat("    Categorizing as 'observed_summary'\n")
-        observed_summary[[df_name]] <- df
-        attr(observed_summary[[df_name]], "category") <- "observed_summary"
       }
-      else {
-        cat("    Missing year or plot column, categorizing as 'other'\n")
-        other[[df_name]] <- df
-        attr(other[[df_name]], "category") <- "other"
-      }
-    }
-    # Handle PFLANZENLABORWERTE (Seehausen) or PFLANZE (Munch)
-    else if(any(sapply(c(config$table_patterns$pflanzenlabor, config$table_patterns$pflanze), 
-                       function(pattern) grepl(pattern, df_name, ignore.case = TRUE)))) {
-      cat("    Plant data table detected\n")
       
-      # For Seehausen: Link with PROBENAHME_PFLANZEN if needed
-      if(!years_col %in% colnames(df) && 
-         !is.null(config$link_keys$pflanzenlabor_probenahme) && 
-         config$link_keys$pflanzenlabor_probenahme %in% colnames(df)) {
+      # For Munch, special handling for PFLANZENLABORWERTE and PROBENAHME_PFLANZEN
+      if (grepl(config$table_patterns$pflanzenlabor, df_name, ignore.case = TRUE)) {
+        cat("    Plant data table detected\n")
         
-        cat("    Linking plant lab values with plant sampling\n")
-        probe_table <- NULL
-        
-        # Find the PROBENAHME_PFLANZEN table
-        for(t_name in names(db)) {
-          if(grepl(config$table_patterns$probenahme_pflanzen, t_name, ignore.case = TRUE) && 
-             years_col %in% colnames(db[[t_name]])) {
-            probe_table <- db[[t_name]]
+        # Find the corresponding probenahme table
+        probe_table_name <- NULL
+        for (name in names(db)) {
+          if (grepl(config$table_patterns$probenahme_pflanzen, name, ignore.case = TRUE)) {
+            probe_table_name <- name
             break
           }
         }
         
-        if(!is.null(probe_table)) {
+        if (!is.null(probe_table_name)) {
+          cat("    Linking plant lab values with plant sampling\n")
           cat("    Found plant sampling table, linking...\n")
-          linked_df <- df %>%
-            left_join(probe_table %>% select(!!sym(config$link_keys$pflanzenlabor_probenahme), 
-                                             all_of(years_col), all_of(plots_col)),
-                      by = config$link_keys$pflanzenlabor_probenahme)
-          observed_summary[[df_name]] <- linked_df
-          attr(observed_summary[[df_name]], "category") <- "observed_summary"
+          probe_table <- db[[probe_table_name]]
+          
+          # Check what linking columns are available
+          if ("Probenahme_Pflanzen_ID" %in% colnames(df) && "Probenahme_Pflanzen_ID" %in% colnames(probe_table)) {
+            joined_df <- df %>%
+              left_join(probe_table, by = "Probenahme_Pflanzen_ID")
+            
+            if (config$col_mapping$year %in% colnames(joined_df) && config$col_mapping$plot %in% colnames(joined_df)) {
+              observed_summary[[df_name]] <- joined_df
         } else {
-          cat("    No plant sampling table found, categorizing as 'other'\n")
+              other[[df_name]] <- joined_df
+            }
+            next
+          }
+        } else {
+          # If no linking possible but has year and plot columns
+          if (has_year && has_plot) {
+            cat("    Categorizing as 'observed_summary'\n")
+            observed_summary[[df_name]] <- df
+          } else {
+            cat("    Missing year or plot column, categorizing as 'other'\n")
           other[[df_name]] <- df
-          attr(other[[df_name]], "category") <- "other"
+          }
+          next
+        }
+      }
+      
+      # For yield data
+      if (grepl(config$table_patterns$ertrag, df_name, ignore.case = TRUE)) {
+        cat("    Ertrag table detected, categorizing as 'observed_summary'\n")
+        
+        # Check if the table has a link to the harvest table
+        ernte_table_name <- NULL
+        for (name in names(db)) {
+          if (grepl(config$table_patterns$ernte, name, ignore.case = TRUE)) {
+            ernte_table_name <- name
+            break
+          }
+        }
+        
+        # If an ernte table exists and ertrag doesn't have Year/Plot_id columns but has Ernte_ID
+        if (!is.null(ernte_table_name) && !has_year && !has_plot && "Ernte_ID" %in% colnames(df)) {
+          cat("    Linking ERTRAG with ERNTE to get Year and Plot_id\n")
+          cat("    Found ERNTE table, linking...\n")
+          ernte_table <- db[[ernte_table_name]]
+          joined_df <- df %>%
+            left_join(ernte_table, by = "Ernte_ID")
+          observed_summary[[df_name]] <- joined_df
+      } else {
+        observed_summary[[df_name]] <- df
+        }
+        next
+      }
+      
+    } 
+    # If it's a Rau dataset, handle special column naming for plant and soil lab data
+    else if (is_rau_dataset) {
+      # For Rau dataset, adjust the linking keys to match the actual column structure
+      # For plant data
+      if (grepl(config$table_patterns$pflanzenlabor, df_name, ignore.case = TRUE)) {
+        cat("    Plant data table detected\n")
+        pflanzenlabor_probenahme_col <- "Probenahme_Pflanzen_ID"
+        
+        # Find the corresponding probenahme table
+        probe_table_name <- NULL
+        for (name in names(db)) {
+          if (grepl(config$table_patterns$probenahme_pflanzen, name, ignore.case = TRUE)) {
+            probe_table_name <- name
+            break
+          }
+        }
+        
+        if (!is.null(probe_table_name)) {
+          cat("    Found plant sampling table, linking...\n")
+          probe_table <- db[[probe_table_name]]
+          
+          # Check what keys are available in both tables
+          if (pflanzenlabor_probenahme_col %in% colnames(df) && pflanzenlabor_probenahme_col %in% colnames(probe_table)) {
+            joined_df <- df %>%
+              left_join(probe_table, by = c("Probenahme_Pflanzen_ID" = "Probenahme_Pflanzen_ID"))
+            
+            if (has_year && has_plot) {
+              observed_summary[[df_name]] <- joined_df
+            } else {
+              other[[df_name]] <- joined_df
+            }
+            next
+          } else {
+            cat("    Cannot link tables - missing required column\n")
+            # If no linking possible but has year and plot columns
+            if (has_year && has_plot) {
+              cat("    Categorizing as 'observed_summary'\n")
+              observed_summary[[df_name]] <- df
+            } else {
+              cat("    Missing year or plot column, categorizing as 'other'\n")
+              other[[df_name]] <- df
+            }
+            next
+          }
+        }
+      }
+      
+      # For soil data
+      if (grepl(config$table_patterns$bodenlabor, df_name, ignore.case = TRUE)) {
+        cat("    Soil data table detected\n")
+        bodenlabor_probenahme_col <- "Probenahme_Boden_ID"
+        
+        # Find the corresponding probenahme table
+        probe_table_name <- NULL
+        for (name in names(db)) {
+          if (grepl(config$table_patterns$probenahme_boden, name, ignore.case = TRUE)) {
+            probe_table_name <- name
+            break
+          }
+        }
+        
+        if (!is.null(probe_table_name)) {
+          cat("    Found soil sampling table, linking...\n")
+          probe_table <- db[[probe_table_name]]
+          
+          # Check what keys are available in both tables
+          if (bodenlabor_probenahme_col %in% colnames(df) && bodenlabor_probenahme_col %in% colnames(probe_table)) {
+            joined_df <- df %>%
+              left_join(probe_table, by = c("Probenahme_Boden_ID" = "Probenahme_Boden_ID"))
+            
+            if (has_year && has_plot) {
+              observed_summary[[df_name]] <- joined_df
+            } else {
+              other[[df_name]] <- joined_df
+            }
+            next
+          } else {
+            cat("    Cannot link tables - missing required column\n")
+            # If no linking possible but has year and plot columns
+            if (has_year && has_plot) {
+              cat("    Categorizing as 'observed_summary'\n")
+              observed_summary[[df_name]] <- df
+            } else {
+              cat("    Missing year or plot column, categorizing as 'other'\n")
+              other[[df_name]] <- df
+            }
+            next
+          }
+        }
+      }
+      
+      # For yield data
+      if (grepl(config$table_patterns$ertrag, df_name, ignore.case = TRUE)) {
+        cat("    Ertrag table detected, categorizing as 'observed_summary'\n")
+        observed_summary[[df_name]] <- df
+        next
+      }
+    } else {
+      # For other datasets (Seehausen), keep the original logic
+      
+      # Check for plant lab data
+      if (grepl(config$table_patterns$pflanzenlabor, df_name, ignore.case = TRUE)) {
+      cat("    Plant data table detected\n")
+        pflanzenlabor_probenahme_col <- config$link_keys$pflanzenlabor_probenahme
+        
+        # Find the corresponding probenahme table
+        probe_table_name <- NULL
+        for (name in names(db)) {
+          if (grepl(config$table_patterns$probenahme_pflanzen, name, ignore.case = TRUE)) {
+            probe_table_name <- name
+            break
+          }
+        }
+        
+        if (!is.null(probe_table_name)) {
+        cat("    Linking plant lab values with plant sampling\n")
+          cat("    Found plant sampling table, linking...\n")
+          probe_table <- db[[probe_table_name]]
+          
+          # Join the tables to get Year and Plot_id columns
+          if (pflanzenlabor_probenahme_col %in% colnames(df)) {
+            joined_df <- df %>%
+              left_join(probe_table, by = setNames("Probenahme_Pflanzen_ID", pflanzenlabor_probenahme_col))
+            
+            if (config$col_mapping$year %in% colnames(joined_df) && config$col_mapping$plot %in% colnames(joined_df)) {
+              observed_summary[[df_name]] <- joined_df
+            } else {
+              other[[df_name]] <- joined_df
+            }
+            next
+          }
+        }
+      }
+      
+      # Check for soil lab data
+      if (grepl(config$table_patterns$bodenlabor, df_name, ignore.case = TRUE)) {
+        cat("    Soil data table detected\n")
+        bodenlabor_probenahme_col <- config$link_keys$bodenlabor_probenahme
+        
+        # Find the corresponding probenahme table
+        probe_table_name <- NULL
+        for (name in names(db)) {
+          if (grepl(config$table_patterns$probenahme_boden, name, ignore.case = TRUE)) {
+            probe_table_name <- name
+            break
+          }
+        }
+        
+        if (!is.null(probe_table_name)) {
+          cat("    Linking soil lab values with soil sampling\n")
+          cat("    Found soil sampling table, linking...\n")
+          probe_table <- db[[probe_table_name]]
+          
+          # Join the tables to get Year and Plot_id columns
+          if (bodenlabor_probenahme_col %in% colnames(df)) {
+            joined_df <- df %>%
+              left_join(probe_table, by = setNames("Probenahme_Boden_ID", bodenlabor_probenahme_col))
+            
+            if (config$col_mapping$year %in% colnames(joined_df) && config$col_mapping$plot %in% colnames(joined_df)) {
+              observed_summary[[df_name]] <- joined_df
+        } else {
+              other[[df_name]] <- joined_df
+            }
+            next
         }
       } 
-      # For Munch or direct plant data
-      else if (years_col %in% colnames(df) && plots_col %in% colnames(df)) {
-        cat("    Categorizing as 'observed_summary'\n")
-        observed_summary[[df_name]] <- df
-        attr(observed_summary[[df_name]], "category") <- "observed_summary"
       }
-      else {
-        cat("    Missing year or plot column, categorizing as 'other'\n")
-        other[[df_name]] <- df
-        attr(other[[df_name]], "category") <- "other"
+      
+      # Check for yield data
+      if (grepl(config$table_patterns$ertrag, df_name, ignore.case = TRUE)) {
+        cat("    Ertrag table detected, categorizing as 'observed_summary'\n")
+        
+        # Check if the table has a link to the harvest table
+        ernte_table_name <- NULL
+        for (name in names(db)) {
+          if (grepl(config$table_patterns$ernte, name, ignore.case = TRUE)) {
+            ernte_table_name <- name
+            break
       }
     }
-    # Management tables - more universal approach across datasets
-    else if (grepl(config$table_patterns$duengung, df_name, ignore.case = TRUE)) {
+        
+        # If an ernte table exists and ertrag doesn't have Year/Plot_id columns but has Ernte_ID
+        if (!is.null(ernte_table_name) && !has_year && !has_plot && "Ernte_ID" %in% colnames(df)) {
+          cat("    Linking ERTRAG with ERNTE to get Year and Plot_id\n")
+          cat("    Found ERNTE table, linking...\n")
+          ernte_table <- db[[ernte_table_name]]
+          joined_df <- df %>%
+            left_join(ernte_table, by = "Ernte_ID")
+          observed_summary[[df_name]] <- joined_df
+        } else {
+          observed_summary[[df_name]] <- df
+        }
+        next
+      }
+    }
+    
+    # For all datasets: categorize tables
+    
+    # Check management activities
+    is_management <- FALSE
+    
+    # Use patterns to identify specific management tables
+    if (any(sapply(c(config$table_patterns$duengung, "fertilization"), 
+                 function(pattern) grepl(pattern, df_name, ignore.case = TRUE)))) {
       cat("    Fertilization table detected, categorizing as 'management'\n")
-      management[[df_name]] <- df
-      attr(management[[df_name]], "category") <- "management"
-    }
-    else if (grepl(config$table_patterns$aussaat, df_name, ignore.case = TRUE)) {
+      is_management <- TRUE
+    } else if (any(sapply(c(config$table_patterns$aussaat, "planting", "sowing"), 
+                        function(pattern) grepl(pattern, df_name, ignore.case = TRUE)))) {
       cat("    Planting table detected, categorizing as 'management'\n")
-      management[[df_name]] <- df
-      attr(management[[df_name]], "category") <- "management"
-    }
-    else if (grepl(config$table_patterns$beregnung, df_name, ignore.case = TRUE)) {
-      cat("    Irrigation table detected, categorizing as 'management'\n")
-      management[[df_name]] <- df
-      attr(management[[df_name]], "category") <- "management"
-    }
-    else if (grepl(config$table_patterns$bodenbearbeitung, df_name, ignore.case = TRUE)) {
-      cat("    Soil tillage table detected, categorizing as 'management'\n")
-      management[[df_name]] <- df
-      attr(management[[df_name]], "category") <- "management"
-    }
-    else if (grepl(config$table_patterns$ernte, df_name, ignore.case = TRUE)) {
+      is_management <- TRUE
+    } else if (any(sapply(c(config$table_patterns$ernte, "harvest"), 
+                        function(pattern) grepl(pattern, df_name, ignore.case = TRUE)))) {
       cat("    Harvest table detected, categorizing as 'management'\n")
-      management[[df_name]] <- df
-      attr(management[[df_name]], "category") <- "management"
-    }
-    else if (grepl(config$table_patterns$pflanzenschutz, df_name, ignore.case = TRUE)) {
+      is_management <- TRUE
+    } else if (any(sapply(c(config$table_patterns$bodenbearbeitung, "tillage"), 
+                        function(pattern) grepl(pattern, df_name, ignore.case = TRUE)))) {
+      cat("    Soil tillage table detected, categorizing as 'management'\n")
+      is_management <- TRUE
+    } else if (any(sapply(c(config$table_patterns$pflanzenschutz, "pesticide", "protection"), 
+                        function(pattern) grepl(pattern, df_name, ignore.case = TRUE)))) {
       cat("    Plant protection table detected, categorizing as 'management'\n")
-      management[[df_name]] <- df
-      attr(management[[df_name]], "category") <- "management"
-    }
-    else if (any(sapply(c(config$table_patterns$versuchsaufbau), 
+      is_management <- TRUE
+    } else if (any(sapply(c(config$table_patterns$versuchsaufbau, "design", "experimental"), 
                         function(pattern) grepl(pattern, df_name, ignore.case = TRUE)))) {
       cat("    Experimental design table detected, categorizing as 'management'\n")
-      management[[df_name]] <- df
-      attr(management[[df_name]], "category") <- "management"
-    }
-    else if (grepl(config$table_patterns$parzelle, df_name, ignore.case = TRUE)) {
+      is_management <- TRUE
+    } else if (any(sapply(c(config$table_patterns$parzelle, "plot"), 
+                        function(pattern) grepl(pattern, df_name, ignore.case = TRUE)))) {
       cat("    Plot table detected, categorizing as 'other'\n")
       other[[df_name]] <- df
-      attr(other[[df_name]], "category") <- "other"
-    }
-    # For other tables, use standard categorization logic
-    else {
-      # If plot column not in df, categorize as "other"
-      if (!plots_col %in% colnames(df)) {
+      next
+    } else if (grepl("boden|soil", df_name, ignore.case = TRUE)) {
+      cat("    Soil data table detected\n")
+      if (has_year && has_plot) {
+        cat("    Categorizing as 'observed_summary'\n")
+        observed_summary[[df_name]] <- df
+      } else {
+        cat("    Missing year or plot column, categorizing as 'other'\n")
+        other[[df_name]] <- df
+      }
+      next
+    } else if (grepl("pflanze|plant", df_name, ignore.case = TRUE)) {
+      cat("    Plant data table detected\n")
+      if (has_year && has_plot) {
+        cat("    Categorizing as 'observed_summary'\n")
+        observed_summary[[df_name]] <- df
+      } else {
+        cat("    Missing year or plot column, categorizing as 'other'\n")
+        other[[df_name]] <- df
+      }
+        next
+    } else {
+      cat("    Default categorization: 'management'\n")
+      is_management <- TRUE
+      }
+      
+    # Assign to appropriate category
+    if (is_management) {
+      if (has_year && has_plot) {
+      management[[df_name]] <- df
+      } else {
         cat("    No plot column found, categorizing as 'other'\n")
         other[[df_name]] <- df
-        attr(other[[df_name]], "category") <- "other"
-        next
       }
-      
-      # If years column not in df but plot column is, categorize as "other"
-      if (!years_col %in% colnames(df)) {
-        cat("    No year column found, categorizing as 'other'\n")
-        other[[df_name]] <- df
-        attr(other[[df_name]], "category") <- "other"
-        next
-      }
-      
-      # Default to management for other tables with plot and year columns
-      cat("    Default categorization: 'management'\n")
-      management[[df_name]] <- df
-      attr(management[[df_name]], "category") <- "management"
+    } else {
+      # If nothing matched, put in other
+      cat("    No specific pattern matched, categorizing as 'other'\n")
+      other[[df_name]] <- df
     }
   }
   
@@ -655,14 +909,12 @@ tag_data_type <- function(db, config) {
   cat("  Observed timeseries tables:", length(observed_timeseries), "\n")
   cat("  Other tables:", length(other), "\n\n")
   
-  ret_list <- list(
+  return(list(
     management = management,
     observed_summary = observed_summary,
     observed_timeseries = observed_timeseries,
     other = other
-  )
-  
-  return(ret_list)
+  ))
 }
 
 #' Process an experimental dataset
@@ -1052,13 +1304,15 @@ reshape_exp_data_generalized <- function(dataset_name, custom_config = NULL) {
   return(result)
 }
 
-#' Main reshape function for experimental data
+#' Reshape crop experiment data into a standard ICASA format
 #'
-#' This function reshapes experimental datasets from multiple sources
-#' into a standardized format for crop modeling, maintaining compatibility
-#' with the original reshape_exp_data function
+#' This function identifies the components of a crop experiment data set and re-arranges them into ICASA sections
+#' (see ICASA standards: https://docs.google.com/spreadsheets/u/0/d/1MYx1ukUsCAM1pcixbVQSu49NU-LfXg-Dtt-ncLBzGAM/pub?output=html)
+#' Note that the function does not handle variable mapping but only re-arranges the data structure.
+#' 
+#' @export
 #'
-#' @param db a list of data frames composing a crop experiment dataset, or a dataset name ("seehausen" or "munch")
+#' @param db a list of data frames composing a crop experiment dataset or a dataset name ("seehausen" or "munch")
 #' @param metadata a metadata table described the dataset, as returned by read_metadata (BonaRes-LTFE format)
 #' @param mother_tbl a data frame; the mother table of the dataset, i.e., describing the experimental design (years, plots_id, treatments_ids, replicates)
 #' 
@@ -1071,7 +1325,7 @@ reshape_exp_data_generalized <- function(dataset_name, custom_config = NULL) {
 #' @importFrom countrycode countrycode
 #'
 reshape_exp_data <- function(db, metadata = NULL, mother_tbl = NULL) {
-  # Check if db is a dataset name
+  # If db is a dataset name, use the generalized function directly
   if(is.character(db) && length(db) == 1) {
     return(reshape_exp_data_generalized(db))
   }
@@ -1086,9 +1340,10 @@ reshape_exp_data <- function(db, metadata = NULL, mother_tbl = NULL) {
       dataset_name <- tolower(metadata$name)
     }
     
-    # Determine if the dataset resembles Seehausen or Munch based on naming patterns
+    # Determine if the dataset resembles one of our known datasets based on naming patterns
     is_seehausen <- any(grepl("seehausen", names(db), ignore.case = TRUE))
     is_munch <- any(grepl("munch", names(db), ignore.case = TRUE))
+    is_rau <- any(grepl("rauischholzhausen", names(db), ignore.case = TRUE))
     
     if(is_seehausen) {
       cat("Dataset appears to be Seehausen-like\n")
@@ -1096,6 +1351,9 @@ reshape_exp_data <- function(db, metadata = NULL, mother_tbl = NULL) {
     } else if(is_munch) {
       cat("Dataset appears to be Munch-like\n")
       return(reshape_exp_data_generalized("munch"))
+    } else if(is_rau) {
+      cat("Dataset appears to be Rauischholzhausen-like\n")
+      return(reshape_exp_data_generalized("rau"))
     } else {
       cat("Using original reshape_exp_data function for unknown dataset\n")
       # For custom datasets, call the original function if it exists
@@ -1112,325 +1370,7 @@ reshape_exp_data <- function(db, metadata = NULL, mother_tbl = NULL) {
   return(reshape_exp_data_generalized("seehausen"))
 }
 
-#' Process a custom dataset using pre-loaded data
-#'
-#' @param db list of data frames
-#' @param config dataset configuration
-#' @param mother_tbl the mother table describing experimental design
-#'
-#' @return a list with the reshaped dataset
-process_dataset_custom <- function(db, config, mother_tbl) {
-  cat(paste0("Processing custom dataset: ", config$name, "\n"))
-  
-  # Define common configuration variables
-  year_col <- config$col_mapping$year
-  plot_col <- config$col_mapping$plot
-  rep_col <- config$col_mapping$rep
-  
-  # Standardize column names
-  for (i in seq_along(db)) {
-    # Year columns
-    for (old_name in config$year_variants) {
-      if (old_name %in% colnames(db[[i]])) {
-        colnames(db[[i]])[colnames(db[[i]]) == old_name] <- year_col
-        cat("  Renamed", old_name, "to", year_col, "in table", names(db)[i], "\n")
-      }
-    }
-    
-    # Plot columns
-    for (old_name in config$plot_variants) {
-      if (old_name %in% colnames(db[[i]])) {
-        colnames(db[[i]])[colnames(db[[i]]) == old_name] <- plot_col
-        cat("  Renamed", old_name, "to", plot_col, "in table", names(db)[i], "\n")
-      }
-    }
-    
-    # Replication columns
-    for (old_name in config$rep_variants) {
-      if (old_name %in% colnames(db[[i]])) {
-        colnames(db[[i]])[colnames(db[[i]]) == old_name] <- rep_col
-        cat("  Renamed", old_name, "to", rep_col, "in table", names(db)[i], "\n")
-      }
-    }
-    
-    # Fix duplicate column names if any
-    dup_cols <- which(duplicated(colnames(db[[i]])))
-    if(length(dup_cols) > 0) {
-      cat("  Found duplicate column names in", names(db)[i], ", fixing...\n")
-      for(j in dup_cols) {
-        colnames(db[[i]])[j] <- paste0(colnames(db[[i]])[j], "_dup")
-      }
-    }
-  }
-  
-  # Tag data by type
-  data_tbls_ident <- tag_data_type(db, config)
-  
-  # Get categorized tables
-  management_tables <- data_tbls_ident$management
-  observed_summary_tables <- data_tbls_ident$observed_summary
-  observed_timeseries_tables <- data_tbls_ident$observed_timeseries
-  other_tables <- data_tbls_ident$other
-  
-  # ----- Create Fields Table -----
-  
-  # Get the plot table
-  plot_table_name <- NULL
-  for(tbl_name in names(other_tables)) {
-    if(grepl(config$table_patterns$parzelle, tbl_name, ignore.case = TRUE)) {
-      plot_table_name <- tbl_name
-      break
-    }
-  }
-  
-  if(!is.null(plot_table_name)) {
-    plot_table <- other_tables[[plot_table_name]]
-    
-    # Define FIELDS ID
-    plot_keys <- get_pkeys(plot_table, alternates = TRUE)
-    fields_cols <- setdiff(colnames(plot_table), c(plot_keys, year_col, plot_col, rep_col))
-    
-    # If we have location columns, create fields table
-    if(any(grepl("Latitude|Longitude|lat|long", fields_cols, ignore.case = TRUE))) {
-      cat("Creating FIELDS table from plot information\n")
-      
-      # Make field table
-      FIELDS_tbl <- plot_table %>%
-        mutate(FL_ID = row_number()) %>%
-        relocate(FL_ID, .before = everything())
-      
-      FIELDS <- FIELDS_tbl %>%
-        select(FL_ID, all_of(fields_cols)) %>%
-        distinct()
-      
-      # Standardize column names if possible
-      for(col in colnames(FIELDS)) {
-        if(grepl("Latitude|lat", col, ignore.case = TRUE)) {
-          colnames(FIELDS)[colnames(FIELDS) == col] <- "FL_LAT"
-        } else if(grepl("Longitude|long", col, ignore.case = TRUE)) {
-          colnames(FIELDS)[colnames(FIELDS) == col] <- "FL_LON"
-        }
-      }
-    } else {
-      # Create a minimal fields table with default coordinates
-      cat("Creating minimal FIELDS table\n")
-      FIELDS <- data.frame(
-        FL_ID = 1,
-        FL_LAT = config$site_info$location$lat,
-        FL_LON = config$site_info$location$lon
-      )
-      
-      FIELDS_tbl <- plot_table %>%
-        mutate(FL_ID = 1)
-    }
-  } else {
-    # If we don't have a plot table, create a minimal one
-    cat("No plot table found, creating minimal FIELDS table\n")
-    FIELDS <- data.frame(
-      FL_ID = 1,
-      FL_LAT = config$site_info$location$lat,
-      FL_LON = config$site_info$location$lon
-    )
-    
-    # Find all unique plots across the dataset
-    all_plots <- unique(unlist(lapply(c(management_tables, observed_summary_tables), 
-                                     function(df) if(plot_col %in% colnames(df)) df[[plot_col]] else NULL)))
-    
-    FIELDS_tbl <- data.frame(
-      Plot_id = all_plots,
-      FL_ID = 1
-    )
-  }
-  
-  # ----- Process Management Tables and create TREATMENTS -----
-  
-  # Try to find the design/treatment table (if mother_tbl is not provided)
-  if(is.null(mother_tbl)) {
-    design_table_name <- NULL
-    for(tbl_name in names(management_tables)) {
-      if(any(sapply(c(config$table_patterns$versuchsaufbau), 
-                   function(pattern) grepl(pattern, tbl_name, ignore.case = TRUE)))) {
-        design_table_name <- tbl_name
-        break
-      }
-    }
-    
-    if(!is.null(design_table_name)) {
-      design_table <- management_tables[[design_table_name]]
-    } else {
-      # Use the first management table as a fallback
-      design_table <- management_tables[[1]]
-    }
-  } else {
-    # Use the provided mother_tbl
-    design_table <- mother_tbl
-  }
-  
-  # Identify treatment information
-  if(!is.null(config$treatment_candidates)) {
-    # For Munch-like datasets
-    treatment_col <- find_column_by_candidates(design_table, config$treatment_candidates)
-    
-    if(!is.null(treatment_col)) {
-      cat("Found treatment information in design table using column", treatment_col, "\n")
-      
-      # Create treatments matrix
-      TREATMENTS <- design_table %>%
-        select(all_of(c(year_col, plot_col, treatment_col))) %>%
-        left_join(FIELDS_tbl %>% select(Plot_id, FL_ID), by = "Plot_id") %>%
-        group_by(across(all_of(treatment_col))) %>%
-        mutate(TRTNO = cur_group_id()) %>%
-        ungroup() %>%
-        relocate(TRTNO, .before = everything()) %>%
-        distinct()
-    } else {
-      # If no treatment column found, use replicate info if available
-      if(rep_col %in% colnames(design_table)) {
-        cat("No treatment column found, using replicate information\n")
-        
-        # Create treatments based on replicates
-        TREATMENTS <- design_table %>%
-          select(all_of(c(year_col, plot_col, rep_col))) %>%
-          left_join(FIELDS_tbl %>% select(Plot_id, FL_ID), by = "Plot_id") %>%
-          mutate(TRTNO = as.numeric(as.factor(paste(Year, Rep_no)))) %>%
-          relocate(TRTNO, .before = everything()) %>%
-          distinct()
-      } else {
-        # Create a simple treatment matrix based on plots
-        cat("No treatment or replicate information found, creating simple treatment matrix\n")
-        TREATMENTS <- data.frame(
-          TRTNO = 1:length(unique(design_table[[plot_col]])),
-          Plot_id = unique(design_table[[plot_col]]),
-          Year = rep(min(design_table[[year_col]]), length(unique(design_table[[plot_col]])))
-        ) %>%
-          left_join(FIELDS_tbl %>% select(Plot_id, FL_ID), by = "Plot_id")
-      }
-    }
-  } else if("Pruefglied_ID" %in% colnames(design_table)) {
-    # For Seehausen-like datasets
-    cat("Found treatment information using Pruefglied_ID\n")
-    
-    # Create treatments matrix
-    TREATMENTS <- design_table %>%
-      select(Year, Plot_id, Pruefglied_ID) %>%
-      left_join(FIELDS_tbl %>% select(Plot_id, FL_ID), by = "Plot_id") %>%
-      group_by(Pruefglied_ID) %>%
-      mutate(TRTNO = cur_group_id()) %>%
-      ungroup() %>%
-      relocate(TRTNO, .before = everything()) %>%
-      distinct()
-  } else {
-    # Create a simple treatment matrix based on plots
-    cat("No standard treatment information found, creating simple treatment matrix\n")
-    TREATMENTS <- data.frame(
-      TRTNO = 1:length(unique(design_table[[plot_col]])),
-      Plot_id = unique(design_table[[plot_col]]),
-      Year = rep(min(design_table[[year_col]]), length(unique(design_table[[plot_col]])))
-    ) %>%
-      left_join(FIELDS_tbl %>% select(Plot_id, FL_ID), by = "Plot_id")
-  }
-  
-  # Process management tables to create management events
-  MANAGEMENT <- list()
-  
-  for(table_name in names(management_tables)) {
-    df <- management_tables[[table_name]]
-    
-    # Skip tables that don't have both year and plot columns
-    if(!(year_col %in% colnames(df) && plot_col %in% colnames(df))) {
-      next
-    }
-    
-    cat("Processing management table:", table_name, "\n")
-    
-    # Create a standard ID for the table
-    id_name <- paste0(toupper(substr(table_name, 1, 2)), "_ID")
-    
-    # Get existing ID column if available
-    existing_id <- get_pkeys(df)[1]
-    
-    # Create a processed version of the table
-    processed_df <- df %>%
-      # Create a management event ID if not already present
-      mutate(!!id_name := if(existing_id %in% colnames(df)) .data[[existing_id]] else row_number()) %>%
-      # Link to treatments
-      left_join(TREATMENTS %>% select(TRTNO, Plot_id), by = "Plot_id")
-    
-    # Keep the table with full information (for display/reference)
-    MANAGEMENT[[table_name]] <- processed_df
-  }
-  
-  # ----- Process Observed Data -----
-  
-  # Process observed summary tables
-  OBSERVED_Summary <- list()
-  
-  for(table_name in names(observed_summary_tables)) {
-    df <- observed_summary_tables[[table_name]]
-    
-    cat("Processing observed summary table:", table_name, "\n")
-    
-    # Link with treatments to get TRTNO
-    if(plot_col %in% colnames(df)) {
-      processed_df <- df %>%
-        left_join(TREATMENTS %>% select(TRTNO, Plot_id), by = "Plot_id") %>%
-        relocate(TRTNO, .before = everything())
-      
-      OBSERVED_Summary[[table_name]] <- processed_df
-    } else {
-      OBSERVED_Summary[[table_name]] <- df
-    }
-  }
-  
-  # Process observed timeseries tables (if any)
-  OBSERVED_TimeSeries <- list()
-  
-  for(table_name in names(observed_timeseries_tables)) {
-    df <- observed_timeseries_tables[[table_name]]
-    
-    cat("Processing observed timeseries table:", table_name, "\n")
-    
-    # Link with treatments to get TRTNO
-    if(plot_col %in% colnames(df)) {
-      processed_df <- df %>%
-        left_join(TREATMENTS %>% select(TRTNO, Plot_id), by = "Plot_id") %>%
-        relocate(TRTNO, .before = everything())
-      
-      OBSERVED_TimeSeries[[table_name]] <- processed_df
-    } else {
-      OBSERVED_TimeSeries[[table_name]] <- df
-    }
-  }
-  
-  # ----- Create Final Output Structure -----
-  
-  # Create GENERAL table
-  GENERAL <- data.frame(
-    PERSONS = config$site_info$person,
-    EMAIL = config$site_info$email,
-    ADDRESS = config$site_info$address,
-    SITE = config$site_info$site,
-    COUNTRY = config$site_info$country
-  )
-  
-  # Combine everything into the final structure
-  result <- list(
-    GENERAL = GENERAL,
-    FIELDS = FIELDS,
-    TREATMENTS = TREATMENTS %>% select(-Plot_id),  # Remove Plot_id from final treatment table
-    MANAGEMENT = MANAGEMENT,
-    OBSERVED_Summary = OBSERVED_Summary,
-    OBSERVED_TimeSeries = OBSERVED_TimeSeries
-  )
-  
-  # Add metadata attributes
-  attr(result, "EXP_DETAILS") <- config$site_info$exp_details
-  attr(result, "SITE_CODE") <- config$site_info$site_code
-  
-  return(result)
-}
-
-# Run the reshape function for both datasets and display the outputs
+# Run the reshape function for all three datasets and display the outputs
 cat("\nProcessing Seehausen dataset...\n")
 seehausen_fmt <- reshape_exp_data_generalized("seehausen")
 display_dataset_summary(seehausen_fmt, "SEEHAUSEN")
@@ -1439,6 +1379,10 @@ cat("\nProcessing Munch dataset...\n")
 munch_fmt <- reshape_exp_data_generalized("munch")
 display_dataset_summary(munch_fmt, "MUNCH")
 
+cat("\nProcessing Rau dataset...\n")
+rau_fmt <- reshape_exp_data_generalized("rau")
+display_dataset_summary(rau_fmt, "RAU")
+
 # ----- Compatibility Function for Original reshape_exp_data -----
 
 #' Compatibility wrapper for the original reshape_exp_data function
@@ -1446,7 +1390,7 @@ display_dataset_summary(munch_fmt, "MUNCH")
 #' This function provides backward compatibility with the original reshape_exp_data function
 #' while leveraging the improved functionality.
 #'
-#' @param db a list of data frames composing a crop experiment dataset, or a dataset name ("seehausen" or "munch")
+#' @param db a list of data frames composing a crop experiment dataset, or a dataset name ("seehausen", "munch", or "rau")
 #' @param metadata a metadata table described the dataset, as returned by read_metadata (BonaRes-LTFE format)
 #' @param mother_tbl a data frame; the mother table of the dataset, i.e., describing the experimental design
 #' 
@@ -1473,9 +1417,10 @@ reshape_exp_data <- function(db, metadata = NULL, mother_tbl = NULL) {
       dataset_name <- tolower(metadata$name)
     }
     
-    # Determine if the dataset resembles Seehausen or Munch based on naming patterns
+    # Determine if the dataset resembles one of our known datasets based on naming patterns
     is_seehausen <- any(grepl("seehausen", names(db), ignore.case = TRUE))
     is_munch <- any(grepl("munch", names(db), ignore.case = TRUE))
+    is_rau <- any(grepl("rauischholzhausen", names(db), ignore.case = TRUE))
     
     if(is_seehausen) {
       cat("Dataset appears to be Seehausen-like\n")
@@ -1483,6 +1428,9 @@ reshape_exp_data <- function(db, metadata = NULL, mother_tbl = NULL) {
     } else if(is_munch) {
       cat("Dataset appears to be Munch-like\n")
       return(reshape_exp_data_generalized("munch"))
+    } else if(is_rau) {
+      cat("Dataset appears to be Rauischholzhausen-like\n")
+      return(reshape_exp_data_generalized("rau"))
     } else {
       cat("Using original reshape_exp_data function for unknown dataset\n")
       # For custom datasets, call the original function if it exists
