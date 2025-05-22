@@ -1,0 +1,6 @@
+﻿Faktor1_Stufe_ID,Faktor_ID,Name,Beschreibung,Art_des_Duengers,Menge_total,Stallmist_auf_Gerstenstoppel,Stroh_nach_Weizen,N_nach_Weizen,Stroh_nach_Gerste,N_nach_Gerste,Zwischenfruechte,Ruebenblatt,Gaerrest,Kompost,Biokohle
+1,1,A,ohne organische Düngung,kein org. Dünger,0,,,,,,,,,,
+2,1,B,Stallmist auf Gerstenstoppel,Stallmist vom Fleischrinderbestand Rauischholzhausen,300,300,,,,,,,,,
+3,1,C,mit Stroh und Gründüngung,"Stroh, Zwischenfrucht und Rübenblatt bzw. Gärrest aus der Biogasanlage Biogas Ebsdorfergrund GmbH und Co. KG sowie zusätzlich N zu Mais und Gerste",,,50,50,50,50,30,400,20,,
+4,1,mK,mit Kompost zu Zuckerrübe bzw. auf Gerstenstoppel,Fertigkompost (mittelkörnig) aus der Kompostierungsanlage Cyriaxweimar,300,,,,,,,,,300,
+5,1,oK,ohne Kompost,kein org. Dünger (2012-2014 Biokohle),0,,,,,,,,,,300
